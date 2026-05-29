@@ -1,0 +1,50 @@
+name: 'RTC Reward on Merge'
+description: 'Automatically award RTC tokens to a contributor when their pull request is merged'
+author: 'hektorhq'
+
+branding:
+  icon: 'award'
+  color: 'orange'
+
+inputs:
+  node-url:
+    description: 'RustChain node URL (e.g. https://50.28.86.131)'
+    required: true
+  amount:
+    description: 'Amount of RTC to award per merged PR'
+    required: false
+    default: '5'
+  wallet-from:
+    description: 'Sending wallet name / pool wallet ID'
+    required: true
+  admin-key:
+    description: 'Admin key / API key for authorizing transfers from wallet-from'
+    required: true
+  wallet-to:
+    description: 'Override recipient wallet (skips auto-detection from PR body)'
+    required: false
+    default: ''
+  wallet-field:
+    description: 'Label in the PR body used to locate the recipient wallet (e.g. "RTC Wallet:")'
+    required: false
+    default: 'RTC Wallet:'
+  dry-run:
+    description: 'Set to "true" to simulate without sending real tokens'
+    required: false
+    default: 'false'
+  github-token:
+    description: 'GitHub token used to post the reward comment on the PR'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  tx-id:
+    description: 'Transaction ID returned by the RustChain node'
+  wallet-to:
+    description: 'Recipient wallet that received the reward'
+  amount:
+    description: 'Amount of RTC awarded'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
