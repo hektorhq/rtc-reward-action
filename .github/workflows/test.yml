@@ -1,0 +1,60 @@
+name: Test Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Run in dry-run mode'
+        required: false
+        default: 'true'
+
+jobs:
+  # ── Dry-run self-test on every push/PR ────────────────────────────────────
+  dry-run-test:
+    name: Dry-run self-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run action in dry-run mode
+        id: reward
+        uses: ./
+        with:
+          node-url: 'https://50.28.86.131'
+          amount: '5'
+          wallet-from: 'test_pool'
+          admin-key: 'test_key_dry_run_only'
+          dry-run: 'true'
+          github-token: ${{ github.token }}
+
+      - name: Verify outputs
+        run: |
+          echo "wallet-to : ${{ steps.reward.outputs.wallet-to }}"
+          echo "amount    : ${{ steps.reward.outputs.amount }}"
+          echo "tx-id     : ${{ steps.reward.outputs.tx-id }}"
+          test "${{ steps.reward.outputs.tx-id }}" = "dry-run"
+          test "${{ steps.reward.outputs.amount }}" = "5"
+          echo "All output checks passed."
+
+  # ── Reward on merged PR (real workflow example) ────────────────────────────
+  reward-on-merge:
+    name: Award RTC on merge
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Award RTC to contributor
+        uses: ./
+        with:
+          node-url: ${{ secrets.RTC_NODE_URL }}
+          amount: '5'
+          wallet-from: ${{ secrets.RTC_WALLET_FROM }}
+          admin-key: ${{ secrets.RTC_ADMIN_KEY }}
+          github-token: ${{ github.token }}
